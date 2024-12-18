@@ -1,6 +1,5 @@
 package com.example.alex_medina_prueba_02
 
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,7 +38,49 @@ data class CalculationState(
     val parteEntera: String = "",
     val residuo: String = "",
     val numInvertido: String = ""
-)
+) {
+    // Función para calcular la división
+    fun calcularDivision(): CalculationState {
+        return if (dividendo.isNotBlank() && divisor.isNotBlank()) {
+            try {
+                val dividendoNum = dividendo.toInt()
+                val divisorNum = divisor.toInt()
+                if (divisorNum != 0) {
+                    // Cálculo de parte entera y residuo usando operaciones básicas
+                    val parteEnteraNum = dividendoNum / divisorNum
+                    val residuoNum = dividendoNum - (parteEnteraNum * divisorNum)
+                    this.copy(
+                        parteEntera = parteEnteraNum.toString(),
+                        residuo = residuoNum.toString()
+                    )
+                } else this
+            } catch (e: NumberFormatException) {
+                this
+            }
+        } else this
+    }
+
+    // Función para invertir número
+    fun invertirNumero(): CalculationState {
+        return if (numero.isNotBlank()) {
+            try {
+                var num = numero.toInt()
+                var invertido = 0
+
+                // Inversión del número
+                while (num > 0) {
+                    val digito = num % 10
+                    invertido = (invertido * 10) + digito
+                    num = num / 10
+                }
+
+                this.copy(numInvertido = invertido.toString())
+            } catch (e: NumberFormatException) {
+                this
+            }
+        } else this
+    }
+}
 
 @Composable
 fun DivisionApp() {
@@ -160,18 +201,17 @@ fun LecturaScreen(
         }
 
         Button(
-            onClick = { /* TODO: Mostrar resultados */ },
+            onClick = { },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondary
-            )
+            ),
+            enabled = false  // Botón deshabilitado
         ) {
             Text("Mostrar resultados")
         }
     }
 }
-
-Solucion necesito
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -229,7 +269,7 @@ fun IngresoScreen(
             onValueChange = { },
             label = { Text("Número") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = false  // Deshabilitado en la segunda pantalla
+            enabled = false
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -241,7 +281,7 @@ fun IngresoScreen(
             Button(
                 onClick = onNavigateToCalculo,
                 modifier = Modifier.weight(1f),
-                enabled = state.nombre.isNotBlank() && state.apellido.isNotBlank() // Solo permite avanzar si hay nombre y apellido
+                enabled = state.nombre.isNotBlank() && state.apellido.isNotBlank()
             ) {
                 Text("Siguiente")
             }
@@ -257,7 +297,6 @@ fun IngresoScreen(
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -293,7 +332,10 @@ fun CalculoScreen(
 
         TextField(
             value = state.dividendo,
-            onValueChange = { onStateChange(state.copy(dividendo = it)) },
+            onValueChange = {
+                val newState = state.copy(dividendo = it)
+                onStateChange(newState.calcularDivision())
+            },
             label = { Text("Dividendo") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -302,7 +344,10 @@ fun CalculoScreen(
 
         TextField(
             value = state.divisor,
-            onValueChange = { onStateChange(state.copy(divisor = it)) },
+            onValueChange = {
+                val newState = state.copy(divisor = it)
+                onStateChange(newState.calcularDivision())
+            },
             label = { Text("Divisor") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -312,24 +357,11 @@ fun CalculoScreen(
         TextField(
             value = state.numero,
             onValueChange = {
-                val newNumero = it
-                onStateChange(state.copy(
-                    numero = newNumero,
-                    numInvertido = newNumero.reversed()
-                ))
+                val newState = state.copy(numero = it)
+                onStateChange(newState.invertirNumero())
             },
             label = { Text("Número") },
             modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TextField(
-            value = state.numInvertido,
-            onValueChange = { },
-            label = { Text("Número Invertido") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = false
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -342,4 +374,3 @@ fun CalculoScreen(
         }
     }
 }
-
