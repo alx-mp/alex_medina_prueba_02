@@ -301,7 +301,7 @@ fun IngresoScreen(
             Button(
                 onClick = onClose,
                 modifier = Modifier.weight(1f),
-                enabled = state.nombre.isNotBlank() && state.apellido.isNotBlank() && !state.datosCompletados
+                enabled = state.nombre.isNotBlank() && state.apellido.isNotBlank() && state.datosCompletados
             ) {
                 Text("Cerrar")
             }
