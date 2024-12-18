@@ -37,16 +37,15 @@ data class CalculationState(
     val numero: String = "",
     val parteEntera: String = "",
     val residuo: String = "",
-    val numInvertido: String = ""
+    val numInvertido: String = "",
+    val datosCompletados: Boolean = false
 ) {
-    // Función para calcular la división
     fun calcularDivision(): CalculationState {
         return if (dividendo.isNotBlank() && divisor.isNotBlank()) {
             try {
                 val dividendoNum = dividendo.toInt()
                 val divisorNum = divisor.toInt()
                 if (divisorNum != 0) {
-                    // Cálculo de parte entera y residuo usando operaciones básicas
                     val parteEnteraNum = dividendoNum / divisorNum
                     val residuoNum = dividendoNum - (parteEnteraNum * divisorNum)
                     this.copy(
@@ -60,25 +59,32 @@ data class CalculationState(
         } else this
     }
 
-    // Función para invertir número
     fun invertirNumero(): CalculationState {
         return if (numero.isNotBlank()) {
             try {
                 var num = numero.toInt()
                 var invertido = 0
-
-                // Inversión del número
                 while (num > 0) {
                     val digito = num % 10
                     invertido = (invertido * 10) + digito
                     num = num / 10
                 }
-
                 this.copy(numInvertido = invertido.toString())
             } catch (e: NumberFormatException) {
                 this
             }
         } else this
+    }
+
+    fun verificarDatosCompletos(): Boolean {
+        return nombre.isNotBlank() &&
+                apellido.isNotBlank() &&
+                dividendo.isNotBlank() &&
+                divisor.isNotBlank() &&
+                numero.isNotBlank() &&
+                parteEntera.isNotBlank() &&
+                residuo.isNotBlank() &&
+                numInvertido.isNotBlank()
     }
 }
 
@@ -105,7 +111,11 @@ fun DivisionApp() {
         composable("calculo") {
             CalculoScreen(
                 state = calculationState,
-                onStateChange = { calculationState = it },
+                onStateChange = { newState ->
+                    calculationState = newState.copy(
+                        datosCompletados = newState.verificarDatosCompletos()
+                    )
+                },
                 onClose = { navController.navigateUp() }
             )
         }
@@ -206,7 +216,7 @@ fun LecturaScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondary
             ),
-            enabled = false  // Botón deshabilitado
+            enabled = state.datosCompletados
         ) {
             Text("Mostrar resultados")
         }
@@ -290,7 +300,8 @@ fun IngresoScreen(
 
             Button(
                 onClick = onClose,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                enabled = state.nombre.isNotBlank() && state.apellido.isNotBlank() && !state.datosCompletados
             ) {
                 Text("Cerrar")
             }
@@ -333,8 +344,8 @@ fun CalculoScreen(
         TextField(
             value = state.dividendo,
             onValueChange = {
-                val newState = state.copy(dividendo = it)
-                onStateChange(newState.calcularDivision())
+                val newState = state.copy(dividendo = it).calcularDivision()
+                onStateChange(newState)
             },
             label = { Text("Dividendo") },
             modifier = Modifier.fillMaxWidth()
@@ -345,8 +356,8 @@ fun CalculoScreen(
         TextField(
             value = state.divisor,
             onValueChange = {
-                val newState = state.copy(divisor = it)
-                onStateChange(newState.calcularDivision())
+                val newState = state.copy(divisor = it).calcularDivision()
+                onStateChange(newState)
             },
             label = { Text("Divisor") },
             modifier = Modifier.fillMaxWidth()
@@ -357,8 +368,8 @@ fun CalculoScreen(
         TextField(
             value = state.numero,
             onValueChange = {
-                val newState = state.copy(numero = it)
-                onStateChange(newState.invertirNumero())
+                val newState = state.copy(numero = it).invertirNumero()
+                onStateChange(newState)
             },
             label = { Text("Número") },
             modifier = Modifier.fillMaxWidth()
@@ -368,7 +379,8 @@ fun CalculoScreen(
 
         Button(
             onClick = onClose,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = state.datosCompletados
         ) {
             Text("Cerrar")
         }
